@@ -10,7 +10,7 @@ function gameBoard(){
         }
     }   //the outermost array signifies the row; the inner ones are the columns
 
-    const  getBoard = () => board;  //this method will eventually render the board
+    const getBoard = () => board;  //this method will eventually render the board
 
     const makeMark = (row, column, player) => {
         const availableCell = board[row][column];
@@ -107,11 +107,16 @@ function Cell(){
         value = player;
     }
 
+    const resetCell = () => {
+    value = 0;
+    }
+
     const getValue = () => value;
 
     return{
         addMark,
         getValue,
+        resetCell,
     }
 }
 
@@ -161,7 +166,69 @@ function Controller(
     return{
         playRound,
         getActivePlayer,
+        getBoard: board.getBoard,
     }
 }
 
-const game = Controller();
+function ScreenController(){
+    const game = Controller();
+    const playerTurnDiv = document.querySelector(".turn");
+    const boardDiv = document.querySelector(".board");
+
+    const updateScreen = () => {
+        boardDiv.textContent = "";
+
+        const board = game.getBoard();
+        const activePlayer = game.getActivePlayer();
+
+        playerTurnDiv.textContent = `${activePlayer.name}'s turn...`;
+
+        board.forEach((row, rowIndex) => { 
+            row.forEach((cell, columnIndex) => {
+                const cellButton = document.createElement("button");
+                cellButton.classList.add("cell");
+
+                cellButton.dataset.row = rowIndex;
+                cellButton.dataset.column = columnIndex;
+
+                cellButton.textContent = cell.getValue();
+                boardDiv.appendChild(cellButton);
+            });
+        });
+    };
+
+    function clickHandler(e) {
+        const selectedRow = e.target.dataset.row;
+        const selectedColumn = e.target.dataset.column;
+
+        if (selectedRow === undefined || selectedColumn === undefined) return;
+
+        game.playRound(
+            Number(selectedRow),
+            Number(selectedColumn)
+        );
+
+        updateScreen();
+        }
+
+    const resetBtn = document.querySelector(".reset");
+    function resetButton() {
+        const board = game.getBoard();
+
+        board.forEach((row) => {
+            row.forEach((cell) => {
+                cell.resetCell();
+            });
+        });
+
+        updateScreen();
+    }
+
+    boardDiv.addEventListener("click", clickHandler);
+    resetBtn.addEventListener("click", resetButton);
+
+    updateScreen();
+
+}
+
+ScreenController();
